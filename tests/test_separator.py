@@ -138,3 +138,32 @@ def test_filename_conflict(test_file, configuration):
                 test_file,
                 directory,
                 filename_format='I wanna be your lover')
+
+
+def test_auto_backend_resolves_to_tensorflow():
+    
+    if not tf.config.list_physical_devices('GPU'):
+        assert True
+
+    separator_tf = Separator("spleeter:2stems", multiprocess=False)
+    assert separator_tf._params["stft_backend"] == "tensorflow"
+    separator_tf = Separator("spleeter:2stems", stft_backend="auto", multiprocess=False)
+    assert separator_tf._params["stft_backend"] == "tensorflow"
+
+
+@pytest.mark.parametrize('test_file', TEST_AUDIO_DESCRIPTORS)
+def test_tensorflow_on_gpu(test_file):
+    adapter = AudioAdapter.default()
+    waveform, _ = adapter.load(test_file)
+
+    if not tf.config.list_physical_devices('GPU'):
+        assert True
+
+    try:
+        with tf.device('/gpu:0'):
+            separator_tf = Separator(
+                "spleeter:2stems", stft_backend="tensorflow", multiprocess=False)
+            separator_tf._separate_tensorflow(waveform, test_file)
+
+    except Exception as e:
+        assert False
