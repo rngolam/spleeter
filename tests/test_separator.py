@@ -145,6 +145,8 @@ def test_auto_backend_resolves_to_tensorflow():
     if not tf.config.list_physical_devices('GPU'):
         assert True
 
+    separator_tf = Separator("spleeter:2stems", multiprocess=False)
+    assert separator_tf._params["stft_backend"] == "tensorflow"
     separator_tf = Separator("spleeter:2stems", stft_backend="auto", multiprocess=False)
     assert separator_tf._params["stft_backend"] == "tensorflow"
 
