@@ -138,3 +138,20 @@ def test_filename_conflict(test_file, configuration):
                 test_file,
                 directory,
                 filename_format='I wanna be your lover')
+
+@pytest.mark.parametrize('test_file', TEST_AUDIO_DESCRIPTORS)
+def test_tensorflow_uses_gpu(test_file):
+    adapter = AudioAdapter.default()
+    waveform, _ = adapter.load(test_file)
+
+    if not tf.config.list_physical_devices('GPU'):
+        assert True
+
+    try:
+        with tf.device('/gpu:0'):
+            separator_tf = Separator(
+                "spleeter:2stems", stft_backend="tensorflow", multiprocess=False)
+            separator_tf._separate_tensorflow(waveform, test_file)
+
+    except Exception as e:
+        assert False
